@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ketan Susu Ruri — Pesan Online</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#1a120b;color:#2b1d12;min-height:100vh;display:flex;justify-content:center}
+.phone{width:100%;max-width:430px;min-height:100vh;background:#fff8f0;position:relative;padding-bottom:90px}
+/* ===== VIEW SWITCHER ===== */
+.switcher{position:sticky;top:0;z-index:50;background:#2b1d12;padding:10px 14px;display:flex;gap:8px}
+.switcher button{flex:1;padding:11px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:#4a3524;color:#d9c6a5}
+.switcher button.active{background:#ffb300;color:#2b1d12}
+/* ===== BUYER ===== */
+.b-hero{background:linear-gradient(135deg,#5d3a1a,#8a5a2b);color:#fff;padding:22px 18px 18px;border-radius:0 0 24px 24px}
+.b-hero h1{font-size:22px;margin-bottom:2px}
+.b-hero .open{display:inline-block;background:#4caf50;color:#fff;font-size:12px;padding:3px 10px;border-radius:20px;margin:6px 0;font-weight:700}
+.b-hero p{font-size:13px;opacity:.85}
+.b-sec{padding:14px 14px 0}
+.b-sec h2{font-size:15px;margin-bottom:8px;color:#5d3a1a}
+.b-item{background:#fff;border-radius:14px;padding:12px;display:flex;gap:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(93,58,26,.08);align-items:center}
+.b-emoji{font-size:34px;flex-shrink:0}
+.b-info{flex:1}
+.b-info h3{font-size:14px;margin-bottom:2px}
+.b-info p{font-size:12px;color:#8a6f4d;margin-bottom:4px}
+.b-price{font-weight:800;color:#c67c1a;font-size:14px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:32px;height:32px;border-radius:50%;border:2px solid #ffb300;background:#fff;font-size:18px;font-weight:800;color:#c67c1a;cursor:pointer}
+.stepper button:active{background:#ffb300;color:#fff}
+.stepper span{font-weight:800;min-width:20px;text-align:center}
+.cartbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#2b1d12;padding:12px 16px;display:none;justify-content:space-between;align-items:center;z-index:40}
+.cartbar.show{display:flex}
+.cartbar .cinfo{color:#fff;font-size:14px}
+.cartbar .cinfo b{color:#ffb300}
+.cartbar button{background:#ffb300;border:none;padding:12px 22px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;color:#2b1d12}
+/* checkout modal */
+.modal{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:100%;background:rgba(0,0,0,.6);display:none;z-index:60;align-items:flex-end}
+.modal.show{display:flex}
+.sheet{background:#fff8f0;width:100%;border-radius:24px 24px 0 0;padding:22px 18px;max-height:85%;overflow-y:auto}
+.sheet h2{font-size:18px;margin-bottom:14px}
+.sheet label{font-size:13px;font-weight:700;display:block;margin:10px 0 4px}
+.sheet input,.sheet select{width:100%;padding:12px;border:2px solid #e8d9c0;border-radius:12px;font-size:15px;background:#fff}
+.sheet .payrow{display:flex;gap:8px;margin-top:4px}
+.sheet .payrow button{flex:1;padding:12px;border:2px solid #e8d9c0;border-radius:12px;background:#fff;font-size:14px;font-weight:700;cursor:pointer}
+.sheet .payrow button.active{border-color:#ffb300;background:#fff3d6}
+.orderbtn{width:100%;background:#4caf50;color:#fff;border:none;padding:15px;border-radius:14px;font-size:16px;font-weight:800;margin-top:16px;cursor:pointer}
+.success{text-align:center;padding:20px 0}
+.success .big{font-size:56px}
+.success h2{margin:10px 0 6px}
+.success p{color:#8a6f4d;font-size:14px;margin-bottom:6px}
+.success .ono{background:#fff3d6;padding:10px;border-radius:12px;font-weight:800;font-size:18px;color:#c67c1a;margin:12px 0}
+/* ===== SELLER ===== */
+.s-head{background:#2b1d12;color:#fff;padding:18px}
+.s-head h1{font-size:18px}
+.s-head .lock{font-size:12px;color:#ffb300}
+.s-tabs{display:flex;background:#2b1d12;padding:0 14px 12px;gap:8px}
+.s-tabs button{flex:1;padding:10px;border:none;border-radius:10px;background:#4a3524;color:#d9c6a5;font-weight:700;font-size:13px;cursor:pointer}
+.s-tabs button.active{background:#ffb300;color:#2b1d12}
+.s-body{padding:14px}
+.s-order{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(93,58,26,.1);border-left:5px solid #ff9800}
+.s-order.new{border-left-color:#4caf50;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 2px 8px rgba(93,58,26,.1)}50%{box-shadow:0 2px 16px rgba(76,175,80,.5)}}
+.s-order .ono{font-weight:800;font-size:15px}
+.s-order .oname{font-size:13px;color:#8a6f4d;margin:2px 0 8px}
+.s-order ul{list-style:none;font-size:13px;margin-bottom:8px}
+.s-order ul li{padding:3px 0;border-bottom:1px dashed #f0e6d2}
+.s-order .ototal{font-weight:800;color:#c67c1a;margin-bottom:10px}
+.s-actions{display:flex;gap:8px}
+.s-actions button{flex:1;padding:11px;border:none;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer}
+.btn-terima{background:#4caf50;color:#fff}
+.btn-siap{background:#ff9800;color:#fff}
+.btn-selesai{background:#9e9e9e;color:#fff}
+.s-status{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:8px}
+.st-baru{background:#e8f5e9;color:#2e7d32}
+.st-proses{background:#fff3e0;color:#e65100}
+.st-selesai{background:#f5f5f5;color:#757575}
+.simbtn{width:100%;background:#2b1d12;color:#ffb300;border:2px dashed #ffb300;padding:13px;border-radius:14px;font-weight:700;font-size:14px;margin-bottom:14px;cursor:pointer}
+.rekap{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(93,58,26,.1)}
+.rekap h3{font-size:15px;margin-bottom:10px}
+.rekap .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e6d2;font-size:14px}
+.rekap .row b{color:#c67c1a}
+.otype{flex:1;padding:10px;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer}
+.otype.active{background:#ffb300;color:#2b1d12;border-color:#ffb300}
+.gpsbtn{width:100%;padding:13px;border:2px dashed #c67c1a;background:#fff;border-radius:12px;font-weight:700;font-size:14px;color:#c67c1a;cursor:pointer;margin-top:4px}
+.gpsbtn.done{border-style:solid;background:#e8f5e9;color:#2e7d32;border-color:#4caf50}
+.hidden{display:none!important}
+.note{text-align:center;font-size:11px;color:#a68a64;padding:14px}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- ==================== BUYER ==================== -->
+<div id="viewBuyer">
+  <div class="b-hero">
+    <h1>🍚 Ketan Susu Ruri</h1>
+    <span class="open">● BUKA</span>
+    <p>📍 Kibin, Serang • 16.30–23.00 WIB</p>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button id="typeDitempat" class="otype active" onclick="setOType('ditempat')">🏪 Di Tempat</button>
+      <button id="typeDiantar" class="otype" onclick="setOType('diantar')">🛵 Diantar</button>
+    </div>
+    <p style="margin-top:8px;font-size:12px">Di tempat: pesan dari tikar, tunggu dipanggil 📢 • Diantar: scan QR yang tersimpan, sertakan lokasi 📍</p>
+  </div>
+
+  <div class="b-sec"><h2>🍚 Ketan Susu</h2><div id="menuKetan"></div></div>
+  <div class="b-sec"><h2>🍢 Gorengan</h2><div id="menuGoreng"></div></div>
+  <div class="b-sec"><h2>🥤 Minuman</h2><div id="menuMinum"></div></div>
+  <p class="note">Scan QR di gerobak untuk pesan • Ketan Susu Ruri</p>
+</div>
+
+<!-- /phone -->
+
+<!-- cart bar -->
+<div class="cartbar" id="cartbar">
+  <div class="cinfo"><b id="cartCount">0</b> item • <b id="cartTotal">Rp0</b></div>
+  <button onclick="openCheckout()">Checkout →</button>
+</div>
+
+<!-- checkout modal -->
+<div class="modal" id="checkoutModal">
+  <div class="sheet">
+    <div id="checkoutForm">
+      <h2>🧾 Konfirmasi Pesanan</h2>
+      <div id="checkoutItems" style="font-size:13px;margin-bottom:6px"></div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:6px">Total: <span id="checkoutTotal" style="color:#c67c1a"></span></div>
+      <label>Nama kamu (buat dipanggil 📢)</label>
+      <input id="buyerName" placeholder="cth: Budi">
+      <div id="deliverySec" class="hidden">
+        <label>Alamat antar</label>
+        <input id="buyerAddr" placeholder="cth: Jl. Raya Kibin No.10, patokan masjid">
+        <button id="gpsBtn" class="gpsbtn" onclick="getGPS()">📍 Sertakan Lokasi Saya</button>
+        <p id="gpsStatus" style="font-size:12px;margin-top:6px;color:#8a6f4d"></p>
+      </div>
+      <label>Catatan (opsional)</label>
+      <input id="buyerNote" placeholder="cth: esnya sedikit">
+      <label>Bayar pakai</label>
+      <div class="payrow">
+        <button class="active" onclick="setPay(this,'Tunai')">💵 Tunai</button>
+        <button onclick="setPay(this,'QRIS')">📱 QRIS</button>
+      </div>
+      <button class="orderbtn" onclick="placeOrder()">Buat Pesanan</button>
+      <button onclick="closeCheckout()" style="width:100%;background:none;border:none;padding:12px;color:#8a6f4d;font-size:14px;cursor:pointer">← Kembali</button>
+    </div>
+    <div id="checkoutSuccess" class="success hidden">
+      <div class="big">✅</div>
+      <h2>Pesanan diterima!</h2>
+      <div class="ono" id="successNo">#A12</div>
+      <p id="successName"></p>
+      <p>Duduk manis, tunggu namamu dipanggil 📢</p>
+      <p style="font-size:12px">Bayar <b id="successPay"></b> • Total <b id="successTotal"></b></p>
+      <button class="orderbtn" onclick="closeCheckout()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ DATA ============ */
+const MENU=[
+ {id:1,cat:'ketan',emoji:'🍚',name:'Ketan Susu Original',desc:'SKM + mesis coklat',price:10000},
+ {id:2,cat:'ketan',emoji:'🧀',name:'Ketan Susu Keju',desc:'SKM + keju parut melimpah',price:13000},
+ {id:3,cat:'ketan',emoji:'🍪',name:'Ketan Susu Oreo',desc:'SKM + remahan oreo',price:13000},
+ {id:4,cat:'ketan',emoji:'🍫',name:'Ketan Susu Milo',desc:'SKM + taburan milo',price:12000},
+ {id:5,cat:'goreng',emoji:'🍢',name:'Tempe Goreng (3 pcs)',desc:'Renyah, anget-anget',price:5000},
+ {id:6,cat:'goreng',emoji:'🥔',name:'Tahu Isi (3 pcs)',desc:'Isi sayur pedas manis',price:5000},
+ {id:7,cat:'minum',emoji:'🍵',name:'Teh Manis',desc:'Hangat / es',price:5000},
+ {id:8,cat:'minum',emoji:'☕',name:'Kopi Tubruk',desc:'Kopi asli, nendang',price:7000},
+];
+const cart={};
+let payMethod='Tunai';
+let orderType='ditempat';
+let buyerCoords=null;
+const ONGKIR=5000;
+const rp=n=>'Rp'+n.toLocaleString('id-ID');
+function setOType(t){
+ orderType=t;buyerCoords=null;
+ document.getElementById('typeDitempat').classList.toggle('active',t==='ditempat');
+ document.getElementById('typeDiantar').classList.toggle('active',t==='diantar');
+}
+function getGPS(){
+ const s=document.getElementById('gpsStatus');
+ const b=document.getElementById('gpsBtn');
+ s.textContent='⏳ Mengambil lokasi...';
+ if(!navigator.geolocation){s.textContent='❌ HP tidak mendukung GPS';return}
+ navigator.geolocation.getCurrentPosition(p=>{
+  buyerCoords={lat:p.coords.latitude.toFixed(6),lng:p.coords.longitude.toFixed(6)};
+  s.innerHTML='✅ Lokasi terkunci — <a href="https://maps.google.com/?q='+buyerCoords.lat+','+buyerCoords.lng+'" target="_blank">lihat di peta</a>';
+  b.classList.add('done');b.textContent='✅ Lokasi Terkunci';
+ },e=>{s.textContent='❌ Gagal: aktifkan GPS & izinkan lokasi';},{enableHighAccuracy:true,timeout:12000});
+}
+
+/* ============ VIEW SWITCH ============ */
+
+/* ============ BUYER ============ */
+function renderMenu(){
+ const cats={ketan:'menuKetan',goreng:'menuGoreng',minum:'menuMinum'};
+ for(const c in cats)document.getElementById(cats[c]).innerHTML='';
+ MENU.forEach(m=>{
+  const q=cart[m.id]||0;
+  const el=document.createElement('div');
+  el.className='b-item';
+  el.innerHTML=`<div class="b-emoji">${m.emoji}</div>
+   <div class="b-info"><h3>${m.name}</h3><p>${m.desc}</p><div class="b-price">${rp(m.price)}</div></div>
+   <div class="stepper"><button onclick="chQty(${m.id},-1)">−</button><span id="q${m.id}">${q}</span><button onclick="chQty(${m.id},1)">+</button></div>`;
+  document.getElementById(cats[m.cat]).appendChild(el);
+ });
+}
+function chQty(id,d){
+ cart[id]=Math.max(0,(cart[id]||0)+d);
+ if(cart[id]===0)delete cart[id];
+ const el=document.getElementById('q'+id);if(el)el.textContent=cart[id]||0;
+ updateCartBar();
+}
+function cartSummary(){
+ let n=0,t=0;for(const id in cart){const m=MENU.find(x=>x.id==id);n+=cart[id];t+=cart[id]*m.price}
+ return{n,t};
+}
+function updateCartBar(){
+ const{n,t}=cartSummary();
+ document.getElementById('cartCount').textContent=n;
+ document.getElementById('cartTotal').textContent=rp(t);
+ document.getElementById('cartbar').classList.toggle('show',n>0);
+}
+function openCheckout(){
+ const{n,t}=cartSummary();if(n===0)return;
+ const ongkir=orderType==='diantar'?ONGKIR:0;
+ let html='';for(const id in cart){const m=MENU.find(x=>x.id==id);html+=`<div>• ${cart[id]}x ${m.name} — ${rp(cart[id]*m.price)}</div>`}
+ if(ongkir>0)html+=`<div>• 🛵 Ongkir — ${rp(ongkir)}</div>`;
+ document.getElementById('checkoutItems').innerHTML=html;
+ document.getElementById('checkoutTotal').textContent=rp(t+ongkir);
+ document.getElementById('deliverySec').classList.toggle('hidden',orderType!=='diantar');
+ document.getElementById('checkoutForm').classList.remove('hidden');
+ document.getElementById('checkoutSuccess').classList.add('hidden');
+ document.getElementById('checkoutModal').classList.add('show');
+}
+function closeCheckout(){document.getElementById('checkoutModal').classList.remove('show')}
+function setPay(btn,m){payMethod=m;btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+let orderSeq=12;
+function placeOrder(){
+ const name=document.getElementById('buyerName').value.trim()||'Tanpa nama';
+ if(orderType==='diantar'){
+  const addr=document.getElementById('buyerAddr').value.trim();
+  if(!addr){alert('Isi alamat antar dulu ya 🙏');return}
+  if(!buyerCoords){alert('Ketuk "📍 Sertakan Lokasi Saya" dulu ya 🙏');return}
+ }
+ const{t}=cartSummary();const ongkir=orderType==='diantar'?ONGKIR:0;
+ orderSeq++;
+ const no='#A'+orderSeq;
+ document.getElementById('successNo').textContent=no;
+ document.getElementById('successName').textContent='Atas nama: '+name+(orderType==='diantar'?' 🛵 (Diantar)':' 🏪 (Di tempat)');
+ document.getElementById('successPay').textContent=payMethod;
+ document.getElementById('successTotal').textContent=rp(t+ongkir);
+ document.getElementById('checkoutForm').classList.add('hidden');
+ document.getElementById('checkoutSuccess').classList.remove('hidden');
+
+ for(const k in cart)delete cart[k];
+ renderMenu();updateCartBar();
+}
+
+renderMenu();
+</script>
+</body>
+</html>
