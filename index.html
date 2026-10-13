@@ -16,6 +16,7 @@ body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#1a120b;c
 .b-hero{background:linear-gradient(135deg,#5d3a1a,#8a5a2b);color:#fff;padding:22px 18px 18px;border-radius:0 0 24px 24px}
 .b-hero h1{font-size:22px;margin-bottom:2px}
 .b-hero .open{display:inline-block;background:#4caf50;color:#fff;font-size:12px;padding:3px 10px;border-radius:20px;margin:6px 0;font-weight:700}
+.b-hero .open.tutup{background:#b3261e}
 .b-hero p{font-size:13px;opacity:.85}
 .b-sec{padding:14px 14px 0}
 .b-sec h2{font-size:15px;margin-bottom:8px;color:#5d3a1a}
@@ -95,7 +96,7 @@ body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#1a120b;c
 <div id="viewBuyer">
   <div class="b-hero">
     <h1>🍚 Ketan Susu Ruri</h1>
-    <span class="open">● BUKA</span>
+    <span class="open" id="shopBadge">● BUKA</span>
     <p>📍 Kibin, Serang • 16.30–23.00 WIB</p>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button id="typeDitempat" class="otype active" onclick="setOType('ditempat')">🏪 Di Tempat</button>
@@ -148,6 +149,7 @@ body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#1a120b;c
       <p id="successName"></p>
       <p>Duduk manis, tunggu namamu dipanggil 📢</p>
       <p style="font-size:12px">Bayar <b id="successPay"></b> • Total <b id="successTotal"></b></p>
+      <p id="successNote" style="font-size:12px;font-weight:700"></p>
       <button class="orderbtn" onclick="closeCheckout()">Tutup</button>
     </div>
   </div>
@@ -167,6 +169,11 @@ const FALLBACK_MENU=[
 ];
 /* Menu live dari Google Sheet (fallback = data di atas jika offline) */
 const SHEET_ID='1FpYN8xEM0Y10tYiXZ0jR-e7uw1J2EO60JPtG-joNW8o';
+/* Backend pesanan — diisi setelah Apps Script di-deploy. Kosongkan = mode manual (tanpa kirim). */
+const APPS_URL='';
+const ORDER_TOKEN='dd849f5119d77c795ef355feaf8f51fc';
+const WA_NUMBER='6281381909651'; // nomor WA penjual utk pesanan via WhatsApp
+let SHOP_OPEN=true;
 let MENU=FALLBACK_MENU.slice();
 function descFor(n){
  const d={'Ketan Susu Original':'SKM + mesis coklat','Ketan Susu Keju':'SKM + keju parut melimpah',
@@ -268,21 +275,63 @@ function openCheckout(){
 }
 function closeCheckout(){document.getElementById('checkoutModal').classList.remove('show')}
 function setPay(btn,m){payMethod=m;btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+async function checkShop(){
+ if(!APPS_URL) return;
+ try{
+  const r=await fetch(APPS_URL+'?token='+encodeURIComponent(ORDER_TOKEN)+'&action=shopStatus&t='+Date.now());
+  const j=await r.json();
+  SHOP_OPEN=!!(j.ok&&j.buka);
+ }catch(e){ SHOP_OPEN=true; }
+ const b=document.getElementById('shopBadge');
+ b.textContent=SHOP_OPEN?'● BUKA':'● TUTUP';
+ b.classList.toggle('tutup',!SHOP_OPEN);
+}
 let orderSeq=12;
-function placeOrder(){
+let sending=false;
+async function placeOrder(){
+ if(sending) return;
  const name=document.getElementById('buyerName').value.trim()||'Tanpa nama';
+ if(!SHOP_OPEN){alert('Warung sedang tutup 🙏');return}
+ let addr='';
  if(orderType==='diantar'){
-  const addr=document.getElementById('buyerAddr').value.trim();
+  addr=document.getElementById('buyerAddr').value.trim();
   if(!addr){alert('Isi alamat antar dulu ya 🙏');return}
   if(!buyerCoords){alert('Ketuk "📍 Sertakan Lokasi Saya" dulu ya 🙏');return}
  }
  const{t}=cartSummary();const ongkir=orderType==='diantar'?ONGKIR:0;
- orderSeq++;
- const no='#A'+orderSeq;
+ const items=[];
+ for(const id in cart){const m=MENU.find(x=>x.id==id);if(m)items.push({name:m.name,qty:cart[id],price:m.price})}
+ let no='#A'+(++orderSeq), terkirim=false, gagal=false, viaWA=false;
+ if(APPS_URL){
+  sending=true;
+  try{
+   const r=await fetch(APPS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({token:ORDER_TOKEN,action:'order',
+    nama:name,tipe:orderType,items:JSON.stringify(items),total:t+ongkir,bayar:payMethod,
+    alamat:addr,lat:buyerCoords?buyerCoords.lat:'',lng:buyerCoords?buyerCoords.lng:''})});
+   const j=await r.json();
+   if(j.ok&&j.id){no='#'+String(j.id).slice(-6);terkirim=true}else{gagal=true}
+  }catch(e){gagal=true}
+  sending=false;
+ }else{
+  /* Tanpa backend: kirim pesanan via WhatsApp */
+  viaWA=true; terkirim=true;
+  let msg='🍚 *PESANAN KETAN SUSU RURI*\nNo: '+no+'\nNama: '+name+'\nTipe: '+(orderType==='diantar'?'Diantar 🛵':'Di Tempat 🏪')+'\n— — —\n';
+  items.forEach(it=>{msg+='• '+it.qty+'x '+it.name+' — Rp'+(it.qty*it.price).toLocaleString('id-ID')+'\n'});
+  if(ongkir>0)msg+='• Ongkir — Rp'+ongkir.toLocaleString('id-ID')+'\n';
+  msg+='*Total: Rp'+(t+ongkir).toLocaleString('id-ID')+'*\nBayar: '+payMethod+'\n';
+  if(orderType==='diantar'){
+   msg+='— — —\nAlamat: '+addr+'\n';
+   if(buyerCoords)msg+='📍 https://maps.google.com/?q='+buyerCoords.lat+','+buyerCoords.lng+'\n';
+  }
+  window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(msg),'_blank');
+ }
  document.getElementById('successNo').textContent=no;
  document.getElementById('successName').textContent='Atas nama: '+name+(orderType==='diantar'?' 🛵 (Diantar)':' 🏪 (Di tempat)');
  document.getElementById('successPay').textContent=payMethod;
  document.getElementById('successTotal').textContent=rp(t+ongkir);
+ const note=document.getElementById('successNote');
+ if(note)note.textContent=terkirim?(viaWA?'✅ Pesanan dibuka di WhatsApp — tinggal tekan kirim':'✅ Pesanan terkirim ke penjual'):(gagal?'⚠️ Pesanan TIDAK terkirim (gangguan). Tunjukkan layar ini ke penjual ya 🙏':'');
  document.getElementById('checkoutForm').classList.add('hidden');
  document.getElementById('checkoutSuccess').classList.remove('hidden');
 
@@ -292,6 +341,7 @@ function placeOrder(){
 
 renderMenu();
 loadMenu();
+checkShop();
 </script>
 </body>
 </html>
