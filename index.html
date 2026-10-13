@@ -107,6 +107,7 @@ body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#1a120b;c
 
   <div id="menuSec"></div>
   <p class="note">Scan QR di gerobak untuk pesan • Ketan Susu Ruri</p>
+  <p class="note" style="opacity:.4;font-size:10px">v1.3</p>
 </div>
 
 <!-- /phone -->
@@ -313,8 +314,8 @@ async function placeOrder(){
    if(j.ok&&j.id){no='#'+String(j.id).slice(-6);terkirim=true}else{gagal=true}
   }catch(e){gagal=true}
   sending=false;
- }else{
-  /* Tanpa backend: kirim pesanan via WhatsApp */
+ }else if(orderType==='diantar'){
+  /* Tanpa backend, mode Diantar: kirim pesanan via WhatsApp */
   viaWA=true; terkirim=true;
   let msg='🍚 *PESANAN KETAN SUSU RURI*\nNo: '+no+'\nNama: '+name+'\nTipe: '+(orderType==='diantar'?'Diantar 🛵':'Di Tempat 🏪')+'\n— — —\n';
   items.forEach(it=>{msg+='• '+it.qty+'x '+it.name+' — Rp'+(it.qty*it.price).toLocaleString('id-ID')+'\n'});
@@ -325,13 +326,16 @@ async function placeOrder(){
    if(buyerCoords)msg+='📍 https://maps.google.com/?q='+buyerCoords.lat+','+buyerCoords.lng+'\n';
   }
   window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(msg),'_blank');
+ }else{
+  /* Tanpa backend, mode Di Tempat: cukup tunjukkan nomor ke penjual */
+  terkirim=true;
  }
  document.getElementById('successNo').textContent=no;
  document.getElementById('successName').textContent='Atas nama: '+name+(orderType==='diantar'?' 🛵 (Diantar)':' 🏪 (Di tempat)');
  document.getElementById('successPay').textContent=payMethod;
  document.getElementById('successTotal').textContent=rp(t+ongkir);
  const note=document.getElementById('successNote');
- if(note)note.textContent=terkirim?(viaWA?'✅ Pesanan dibuka di WhatsApp — tinggal tekan kirim':'✅ Pesanan terkirim ke penjual'):(gagal?'⚠️ Pesanan TIDAK terkirim (gangguan). Tunjukkan layar ini ke penjual ya 🙏':'');
+ if(note)note.textContent=terkirim?(viaWA?'✅ Pesanan dibuka di WhatsApp — tinggal tekan kirim':'✅ Tunjukkan nomor pesanan ini ke penjual 📢'):(gagal?'⚠️ Pesanan TIDAK terkirim (gangguan). Tunjukkan layar ini ke penjual ya 🙏':'');
  document.getElementById('checkoutForm').classList.add('hidden');
  document.getElementById('checkoutSuccess').classList.remove('hidden');
 
